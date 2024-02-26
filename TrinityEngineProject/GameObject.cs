@@ -54,7 +54,7 @@ namespace TrinityEngineProject
         }
         #endregion
 
-        public GameObject Instantiate(Transform parent)
+        public GameObject Instantiate(Transform? parent = null)
         {
             Component[] copiedComponents = new Component[_components.Count];
             for (int i = 0; i < copiedComponents.Length; i++)
@@ -62,13 +62,14 @@ namespace TrinityEngineProject
                 copiedComponents[i] = _components[i].ShallowCopy();
             }
             GameObject gameObject = new GameObject(copiedComponents);
+            gameObject.transform.parent = parent;
             gameObject.active = active;
-            gameObject.Load();
             if (transform.HasChildren)
             {
-                foreach (var child in transform.Children)
-                    child.gameObject.Instantiate(transform);
+                foreach (var child in transform.Children.ToArray())
+                    child.gameObject.Instantiate(gameObject.transform);
             }
+            if (parent == null) gameObject.Load();
             return gameObject;
         }
         public static GameObject Instantiate(params Component[] components)
@@ -103,7 +104,7 @@ namespace TrinityEngineProject
             }
             sceneGameObjects.Clear();
         }
-        bool isPartOfScene;
+        public bool isPartOfScene { get; private set; }
 
         public bool active { get; private set; } = true;
         public void setAcive(bool value)
@@ -126,8 +127,11 @@ namespace TrinityEngineProject
         {
             if (loaded || !active) return;
             loaded = true;
-            sceneGameObjects.Add(this);
-            isPartOfScene = true;
+            if (!isPartOfScene)
+            {
+                sceneGameObjects.Add(this);
+                isPartOfScene = true;
+            }
             foreach (var component in _components)
             {
                 component.OnLoad();

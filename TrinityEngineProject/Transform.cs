@@ -177,7 +177,13 @@ namespace TrinityEngineProject
                 }
                 else
                 {
-                    if (value == this || value.IsParent(this)) return;
+                    if (value.gameObject.isPartOfScene != gameObject.isPartOfScene ||
+                        value == this ||
+                        value.IsParent(this))
+                    {
+                        return;
+                    }
+                        
                     _parent?._children.Remove(this);
                     _parent = value;
                     _parent._children.Add(this);
