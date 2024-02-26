@@ -9,6 +9,7 @@ namespace TrinityEngineProject
 
     internal class GameObject
     {
+        Transform _transform;
         public Transform transform
         {
             get
@@ -17,8 +18,9 @@ namespace TrinityEngineProject
             }
             set
             {
-                if (value == null)
-                    return;
+                if (value == null) return;
+
+                if (loaded) _transform.OnUnload();
                 _transform.gameObject = null;
                 if (value.gameObject == null)
                 {
@@ -30,9 +32,9 @@ namespace TrinityEngineProject
                     _transform = value.Copy();
                     _transform.gameObject = this;
                 }
+                if (loaded) _transform.OnLoad();
             }
         }
-        Transform _transform;
 
         #region component
         public Component[] Components => components.ToArray();
@@ -46,7 +48,7 @@ namespace TrinityEngineProject
         }
         public void RemoveComponent(Component component)
         {
-            component.OnUnload();
+            if (loaded) component.OnUnload();
             components.Remove(component);
         }
         public T? GetComponent<T>() where T : Component

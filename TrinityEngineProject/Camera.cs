@@ -41,8 +41,12 @@ namespace TrinityEngineProject
             return Matrix4.CreatePerspectiveFieldOfView(fov, TgMain.aspectRatio, near, far);
         }
 
+        public bool loaded { get; private set; }
         public override void OnLoad()
         {
+            if (loaded) return;
+            loaded = true;
+
             base.OnLoad();
             cameras.Add(main);
             if (main == null)
@@ -53,6 +57,9 @@ namespace TrinityEngineProject
         }
         public override void OnUnload()
         {
+            if(!loaded) return;
+            loaded = false;
+
             base.OnUnload();
             cameras.Remove(this);
             if(main == this)
