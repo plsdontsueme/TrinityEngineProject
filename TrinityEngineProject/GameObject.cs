@@ -1,4 +1,6 @@
 ﻿
+using OpenTK.Mathematics;
+
 namespace TrinityEngineProject
 {
     /*
@@ -19,63 +21,54 @@ namespace TrinityEngineProject
             set
             {
                 if (value == null) return;
-
-                if (loaded) _transform.OnUnload();
-                _transform.gameObject = null;
-                if (value.gameObject == null)
-                {
-                    value.gameObject = this;
-                    _transform = value;
-                }
-                else
-                {
-                    _transform = value.Copy();
-                    _transform.gameObject = this;
-                }
-                if (loaded) _transform.OnLoad();
+                transform.CopyValues(value);
             }
         }
 
         #region component
-        public Component[] Components => components.ToArray();
-        List<Component> components;
+        public Component[] Components => _components.ToArray();
+        readonly List<Component> _components = new List<Component>();
         public void AddComponent(Component component)
         {
             if (component.gameObject != null) component.gameObject.RemoveComponent(component);
             component.gameObject = this;
-            components.Add(component);
-            if (loaded) component.OnLoad();
+            _components.Add(component);
+            if (loaded && !component.loaded) component.OnLoad();
         }
         public void RemoveComponent(Component component)
         {
-            if (loaded) component.OnUnload();
-            components.Remove(component);
+            if(component.loaded)component.OnUnload();
+            _components.Remove(component);
         }
         public T? GetComponent<T>() where T : Component
         {
-            T? result = components.OfType<T>().FirstOrDefault();
+            T? result = _components.OfType<T>().FirstOrDefault();
             if (result == null) TgMessage.ThrowWarning($"GameObject does not contain a Component of Type '{typeof(T)}' )0o0(");
             return result;
         }
         public T[] GetComponents<T>() where T : Component
         {
-            T[] result = components.OfType<T>().ToArray();
+            T[] result = _components.OfType<T>().ToArray();
             if (result.Length == 0) TgMessage.ThrowWarning($"GameObject does not contain Components of Type '{typeof(T)}' )0o0(");
             return result;
         }
         #endregion
 
-        public static GameObject Instantiate(GameObject blueprint)
+        public GameObject Instantiate(Transform parent)
         {
-            Component[] blueprintComponents = blueprint.Components;
-            Component[] copiedComponents = new Component[blueprintComponents.Length];
-            for (int i = 0; i < blueprintComponents.Length; i++)
+            Component[] copiedComponents = new Component[_components.Count];
+            for (int i = 0; i < copiedComponents.Length; i++)
             {
-                copiedComponents[i] = blueprintComponents[i].ShallowCopy();
+                copiedComponents[i] = _components[i].ShallowCopy();
             }
-            GameObject gameObject = new GameObject(blueprint.transform.Copy(), copiedComponents);
-            gameObject.active = blueprint.active;
+            GameObject gameObject = new GameObject(copiedComponents);
+            gameObject.active = active;
             gameObject.Load();
+            if (transform.HasChildren)
+            {
+                foreach (var child in transform.Children)
+                    child.gameObject.Instantiate(transform);
+            }
             return gameObject;
         }
         public static GameObject Instantiate(params Component[] components)
@@ -84,17 +77,19 @@ namespace TrinityEngineProject
             gameObject.Load();
             return gameObject;
         }
-        public static GameObject Instantiate(Transform transform, params Component[] components)
+        public static GameObject Instantiate(Vector3? position = null, Vector3? scale = null, Quaternion? rotation = null, params Component[] components)
         {
-            GameObject gameObject = new GameObject(transform, components);
+            GameObject gameObject = new GameObject(components);
+            if (position.HasValue) gameObject.transform.position = position.Value;
+            if (scale.HasValue) gameObject.transform.scale = scale.Value;
+            if (rotation.HasValue) gameObject.transform.rotation = rotation.Value;
             gameObject.Load();
             return gameObject;
         }
-        public GameObject(params Component[] components) : this(new Transform(), components) { }
-        public GameObject(Transform transform, params Component[] components)
+        public GameObject(params Component[] components)
         {
-            _transform = transform;
-            this.components = new List<Component>();
+            _transform = new Transform();
+            _transform.gameObject = this;
             foreach (var component in components)
                 AddComponent(component);
         }
@@ -133,28 +128,44 @@ namespace TrinityEngineProject
             loaded = true;
             sceneGameObjects.Add(this);
             isPartOfScene = true;
-            transform.OnLoad();
-            foreach (var component in components)
+            foreach (var component in _components)
             {
                 component.OnLoad();
+            }
+            foreach (var child in transform.Children)
+            {
+                child.gameObject.Load();
             }
         }
         void Unload()
         {
             if (!loaded) return;
             loaded = false;
-            transform.OnUnload();
-            foreach (var component in components)
+            foreach (var component in _components)
             {
                 component.OnUnload();
+            }
+            foreach (var child in transform.Children)
+            {
+                child.gameObject.Unload();
             }
         }
         public void Destroy()
         {
-            isPartOfScene = false;
-            sceneGameObjects.Remove(this);
+            RemoveFromScene();
             Unload();
         }
+        void RemoveFromScene()
+        {
+            isPartOfScene = false;
+            sceneGameObjects.Remove(this);
+            foreach (var child in transform.Children)
+            {
+                child.gameObject.RemoveFromScene();
+            }
+        }
 
+
+        
     }
 }

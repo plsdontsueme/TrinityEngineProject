@@ -3,7 +3,7 @@ namespace TrinityEngineProject
 {
     /*
      * Access for:
-     *  GameObject - set gameObject
+     *  GameObject - set gameObject, load, unload
      *  User - create and assign to GameObject, read gameObject
      */
 
@@ -12,14 +12,14 @@ namespace TrinityEngineProject
         public GameObject gameObject { get; internal set; }
         public Transform transform => gameObject.transform;
 
-        public bool loadel { get; private set; }
-        public virtual void OnLoad()
+        public bool loaded { get; private set; }
+        internal virtual void OnLoad()
         {
-            loadel = true;
+            loaded = true;
         }
-        public virtual void OnUnload()
+        internal virtual void OnUnload()
         {
-            loadel = false;
+            loaded = false;
         }
 
         public Component ShallowCopy()

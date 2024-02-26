@@ -8,7 +8,7 @@ namespace TrinityEngineProject
      *  User - create and assign to mesh renderers
     */
 
-    internal class Camera : Transform
+    internal class Camera : Component
     {
         static Vector3 up = Vector3.UnitY;
         static Vector3 forward = -Vector3.UnitZ;
@@ -22,13 +22,13 @@ namespace TrinityEngineProject
 
         public Matrix4 GetViewMatrix()
         {
-            Vector3 cameraDirection = rotation * forward;
+            Vector3 cameraDirection = transform.globalRotation * forward;
             Vector3 cameraRight = Vector3.Normalize(Vector3.Cross(up, cameraDirection));
             Vector3 cameraUp = Vector3.Cross(cameraDirection, cameraRight);
 
             Matrix4 mat0 = new Matrix4(new Vector4(-cameraRight, 0), new Vector4(cameraUp, 0), new Vector4(-cameraDirection, 0), new Vector4(Vector3.Zero, 1));
             Matrix4 mat1 = Matrix4.Identity;
-            mat1.Column3 = new Vector4(-position, 1);
+            mat1.Column3 = new Vector4(-transform.globalPosition, 1);
 
             Matrix4 final = mat0 * mat1;
             final.Transpose();
@@ -41,12 +41,8 @@ namespace TrinityEngineProject
             return Matrix4.CreatePerspectiveFieldOfView(fov, TgMain.aspectRatio, near, far);
         }
 
-        public bool loaded { get; private set; }
-        public override void OnLoad()
+        internal override void OnLoad()
         {
-            if (loaded) return;
-            loaded = true;
-
             base.OnLoad();
             cameras.Add(main);
             if (main == null)
@@ -55,11 +51,8 @@ namespace TrinityEngineProject
             }
 
         }
-        public override void OnUnload()
+        internal override void OnUnload()
         {
-            if(!loaded) return;
-            loaded = false;
-
             base.OnUnload();
             cameras.Remove(this);
             if(main == this)

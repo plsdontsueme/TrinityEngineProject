@@ -42,12 +42,12 @@ namespace TrinityEngineProject
             mesh.Draw();
         }
 
-        public override void OnLoad()
+        internal override void OnLoad()
         {
             base.OnLoad();
             Renderer.AddToRenderQueue(this);
         }
-        public override void OnUnload()
+        internal override void OnUnload()
         {
             base.OnUnload();
             Renderer.RemoveFromRenderQueue(this);

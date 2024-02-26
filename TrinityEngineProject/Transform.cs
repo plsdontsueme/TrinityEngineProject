@@ -1,18 +1,17 @@
 ﻿using OpenTK.Mathematics;
-using System.ComponentModel;
 
 namespace TrinityEngineProject
 {
     /*
-     * Access for:
-     *  GameObject - set gameObject
-     *  Renderer - GetMatrix for model
-     *  User - create and assign to GameObject, read gameObject
-     */
+        * Access for:
+        *  GameObject - set gameObject, load, unload
+        *  Renderer - GetMatrix for model
+        *  User - create and assign to GameObject, read gameObject
+        */
 
     internal class Transform
     {
-        public GameObject? gameObject { get; internal set; }
+        public GameObject gameObject { get; internal set; }
 
         Vector3 _position;
         public Vector3 position
@@ -172,7 +171,7 @@ namespace TrinityEngineProject
             }
             set
             {
-                if(value == null)
+                if (value == null)
                 {
                     _parent = value;
                 }
@@ -182,8 +181,12 @@ namespace TrinityEngineProject
                     _parent?._children.Remove(this);
                     _parent = value;
                     _parent._children.Add(this);
+                    if (gameObject.loaded)
+                    {
+                        _parent.gameObject.Load(); // returns if already loaded
+                    }
                 }
-                
+
                 UpdateAllGlobal();
             }
         }
@@ -192,31 +195,39 @@ namespace TrinityEngineProject
         {
             if (_parent == null) return false;
             if (_parent == transform) return true;
-            
-            return IsParent(_parent);     
+
+            return IsParent(_parent);
         }
-        readonly List<Transform> _children = new List<Transform>();
-        public Transform[] Children => _children.ToArray();
-        //public IEnumerable<Transform> Children => _children.AsReadOnly();
+        internal readonly List<Transform> _children = new List<Transform>();
+        public bool HasChildren => _children.Count > 0;
+        public IReadOnlyList<Transform> Children => _children.AsReadOnly();
 
 
-        public Transform Copy()
+        public void CopyValues(Transform reference)
         {
-            return new Transform(_position, _scale, _rotation);
+            _position = reference.position;
+            _scale = reference.scale;
+            _rotation = reference.rotation;
+            UpdateAllGlobal();
+        }
+        public Transform(Transform reference)
+        {
+            _position = reference.position;
+            _scale = reference.scale;
+            _rotation = reference.rotation;
+            UpdateAllGlobal();
         }
         public Transform(Vector3? position = null, Vector3? scale = null, Quaternion? rotation = null)
         {
-            this.position = position ?? Vector3.Zero;
-            this.scale = scale ?? Vector3.One;
-            this.rotation = rotation ?? Quaternion.Identity;
+            _position = position ?? Vector3.Zero;
+            _scale = scale ?? Vector3.One;
+            _rotation = rotation ?? Quaternion.Identity;
+            UpdateAllGlobal();
         }
 
         public Matrix4 GetMatrix()
         {
             return Matrix4.CreateScale(globalScale) * Matrix4.CreateFromQuaternion(globalRotation) * Matrix4.CreateTranslation(globalPosition);
         }
-
-        public virtual void OnLoad() { }
-        public virtual void OnUnload() { }
     }
 }

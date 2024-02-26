@@ -49,9 +49,10 @@ namespace TrinityEngineProject
             Renderer.AddShader("...//..//..//..//..//Data//Shaders//standard");
             GameObject.Instantiate(new Camera(), new PlayerBehaviour()).transform.position = (0, 0, 20);
             Material material = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"));
-            GameObject o = GameObject.Instantiate(new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b.tgd"), material));
+            GameObject o = GameObject.Instantiate(new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b.tgd"), material), new ObjectSpinner());
             Material material1 = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//HairD.jpg"));
             GameObject o1 = GameObject.Instantiate(new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b_1.tgd"), material1));
+            o1.transform.parent = o.transform;
 
             CursorState = CursorState.Grabbed;
         }

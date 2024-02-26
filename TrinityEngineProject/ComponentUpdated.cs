@@ -10,12 +10,12 @@ namespace TrinityEngineProject
 
     class ComponentUpdated : Component
     {
-        public override void OnLoad()
+        internal override void OnLoad()
         {
             base.OnLoad();
             Input._window.UpdateFrame += Update;
         }
-        public override void OnUnload()
+        internal override void OnUnload()
         {
             base.OnUnload();
             Input._window.UpdateFrame -= Update;
