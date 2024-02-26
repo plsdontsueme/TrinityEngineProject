@@ -6,18 +6,29 @@ namespace TrinityEngineProject
 {
     internal class PlayerBehaviour : ComponentUpdated
     {
-        public PlayerBehaviour()
+        Transform camTransform;
+        public PlayerBehaviour(Transform camTransform)
         {
+            this.camTransform = camTransform;
             Input.MouseMove += Input_MouseMove;
         }
 
-        Vector2d sensitivity = new(4f, 4f);
+        Vector2d sensitivity = new(0.001f, 0.001f);
         Vector2d virtualMouse;
+        Vector2 lastMouse;
+        bool first = true;
         private void Input_MouseMove(MouseMoveEventArgs e)
         {
-            virtualMouse.X -= (double)e.DeltaX * sensitivity.X * Time.deltaTime;
-            virtualMouse.Y = MathHelper.Clamp(virtualMouse.Y - (double)e.DeltaY * Time.deltaTime * sensitivity.Y, -1.569d, 1.569d);
-            transform.rotation = Quaternion.FromAxisAngle(Vector3.UnitY, (float)virtualMouse.X) * Quaternion.FromAxisAngle(Vector3.UnitX, (float)virtualMouse.Y);
+            if (first)
+            {
+                lastMouse = e.Position;
+                first = false;
+            }
+            virtualMouse.X -= ((double)e.Position.X-lastMouse.X) * sensitivity.X;
+            virtualMouse.Y = MathHelper.Clamp(virtualMouse.Y - ((double)e.Position.Y - lastMouse.Y) * sensitivity.Y, -1.569d, 1.569d);
+            camTransform.rotation = Quaternion.FromAxisAngle(Vector3.UnitX, (float)virtualMouse.Y);
+            transform.rotation = Quaternion.FromAxisAngle(Vector3.UnitY, (float)virtualMouse.X);
+            lastMouse = e.Position;
         }
 
         protected override void Update(FrameEventArgs e)
@@ -29,7 +40,7 @@ namespace TrinityEngineProject
             if (Input.GetKey(Keys.D)) movement.X += 1;
             if (movement.Length == 0) return;
             movement.Normalize();
-            transform.position += movement * Time.deltaTime * 3;
+            transform.position += transform.rotation * movement * Time.deltaTime * 3;
         }
     }
 }

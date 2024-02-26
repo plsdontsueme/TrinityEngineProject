@@ -7,9 +7,20 @@ namespace TrinityEngineProject
     {
         //static string errorLog;
 
-        public static void SendMessage(string message) => SendMessage(new StackTrace().GetFrame(1).GetMethod().ReflectedType.Name, message);
-        public static void SendMessage(object sender, string message) => SendMessage(sender.ToString(), message);
-        public static void SendMessage(string sender, string message)
+        public static void PrintArray(Array array)
+        {
+            string message = $"[{array.Length} Elements]";
+            int index = 0;
+            foreach (var element in array)
+            {
+                message += $"{Environment.NewLine}[{index}] {element.ToString()}";
+                index++;
+            }
+            Send(message);
+        }
+        public static void Send(string message) => Send(new StackTrace().GetFrame(1).GetMethod().ReflectedType.Name, message);
+        public static void Send(object sender, string message) => Send(sender.ToString(), message);
+        public static void Send(string sender, string message)
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.Write($"[{sender}] ");

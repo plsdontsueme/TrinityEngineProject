@@ -9,8 +9,8 @@ namespace TrinityEngineProject
         {
             base.Update(e);
             transform.rotation = Quaternion.FromEulerAngles(transform.rotation.ToEulerAngles() + Vector3.One * Time.deltaTime);
-            //transform.scale = Vector3.One * MathF.Sin(0.0001f * Time.time)*.5f;
-            //transform.position = Vector3.One * MathF.Sin(0.0001f * Time.time) * .5f;
+            transform.scale = Vector3.One * MathF.Sin(0.0001f * Time.time)*.5f;
+            transform.position = Vector3.One * MathF.Sin(0.01f * Time.time) * .5f;
         }
     }
 }

@@ -41,7 +41,7 @@ foreach (string line in screen.Split(Environment.NewLine))
 }
 
 
-using (TgMain window = new TgMain(1600, 900, "trinity"))
+using (TgMain window = new TgMain(1920, 1080, "trinity"))
 {
     window.Run();
 }

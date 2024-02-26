@@ -16,7 +16,7 @@ namespace TrinityEngineProject
         static List<Camera> cameras = new List<Camera>();
         public static Camera main { get; private set; }
 
-        float fov = float.Pi * .125f;
+        float fov = float.Pi * 0.4f;
         float near = 0.01f;
         float far = 100;
 

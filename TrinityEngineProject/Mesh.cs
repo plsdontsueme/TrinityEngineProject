@@ -19,7 +19,6 @@ namespace TrinityEngineProject
         int VertexArrayObject;
         int ElementBufferObject;
 
-        public readonly string filename;
         private static Dictionary<string, Mesh> meshes = new Dictionary<string, Mesh>();
         public static void ClearMeshes()
         {
@@ -36,12 +35,13 @@ namespace TrinityEngineProject
             }
             else
             {
-                return new Mesh(filename);
+                Mesh mesh = new Mesh(filename);
+                meshes.Add(filename, mesh);
+                return mesh;
             }
         }
         private Mesh(string filename)
         {
-            this.filename = filename;
             data = ImportTgd(filename);
 
             #region load
@@ -62,7 +62,7 @@ namespace TrinityEngineProject
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(1);
             #endregion
-
+            TgMessage.PrintArray(data.vertexData);
         }
 
         public void Draw()

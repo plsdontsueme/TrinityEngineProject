@@ -54,7 +54,28 @@ namespace TrinityEngineProject
         }
         #endregion
 
-        public GameObject Instantiate(Transform? parent = null)
+        public GameObject Instantiate(Vector3? position = null, Vector3? scale = null, Quaternion? rotation = null, Transform? parent = null)
+        {
+            Component[] copiedComponents = new Component[_components.Count];
+            for (int i = 0; i < copiedComponents.Length; i++)
+            {
+                copiedComponents[i] = _components[i].ShallowCopy();
+            }
+            GameObject gameObject = new GameObject(copiedComponents);
+            if (position.HasValue) gameObject.transform.position = position.Value;
+            if (scale.HasValue) gameObject.transform.scale = scale.Value;
+            if (rotation.HasValue) gameObject.transform.rotation = rotation.Value;
+            gameObject.active = active;
+            if (transform.HasChildren)
+            {
+                foreach (var child in transform.Children.ToArray())
+                    child.gameObject.InstantiateAsChild(gameObject.transform);
+            }
+            gameObject.Load();
+            gameObject.transform.parent = parent;
+            return gameObject;
+        }
+        void InstantiateAsChild(Transform parent)
         {
             Component[] copiedComponents = new Component[_components.Count];
             for (int i = 0; i < copiedComponents.Length; i++)
@@ -67,10 +88,8 @@ namespace TrinityEngineProject
             if (transform.HasChildren)
             {
                 foreach (var child in transform.Children.ToArray())
-                    child.gameObject.Instantiate(gameObject.transform);
+                    child.gameObject.InstantiateAsChild(gameObject.transform);
             }
-            if (parent == null) gameObject.Load();
-            return gameObject;
         }
         public static GameObject Instantiate(params Component[] components)
         {

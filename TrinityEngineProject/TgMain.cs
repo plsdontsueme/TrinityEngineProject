@@ -1,9 +1,9 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using NAudio.Wave;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Reflection;
 
 namespace TrinityEngineProject
 {
@@ -16,6 +16,7 @@ namespace TrinityEngineProject
                 Title = title,
                 StartVisible = false,
                 NumberOfSamples = 4, //AntiAliasing
+                WindowBorder = WindowBorder.Hidden
             })
         {
             Input._window = this;
@@ -47,14 +48,23 @@ namespace TrinityEngineProject
         void LoadResources()
         {
             Renderer.AddShader("...//..//..//..//..//Data//Shaders//standard");
-            GameObject.Instantiate(new Camera(), new PlayerBehaviour()).transform.position = (0, 0, 20);
-            Material material = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"));
-            GameObject nierPrefab = new GameObject(new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b.tgd"), material), new ObjectSpinner());
-            Material material1 = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//HairD.jpg"));
-            GameObject nierHairprefab = new GameObject(new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b_1.tgd"), material1));
-            nierHairprefab.transform.parent = nierPrefab.transform;
 
-            nierPrefab.Instantiate();
+            Material zaiki = new Material(Texture.Get("...//..//..//..//..//Data//Textures//zaiki-k.png"));
+            Material nier_d = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"));
+            Mesh cube = Mesh.Get("...//..//..//..//..//Data//Models//primitive_cube.tgd");
+            GameObject zaikiCube = new GameObject(new MeshRenderer(cube, zaiki), new ZaikiCubeBehaviour());
+
+            Rnd.SetSeed(175);
+            for(int i=0; i<5000; i++)
+            {
+                float height = Rnd.RandomRange(0.9f, 1f);
+                zaikiCube.Instantiate((Rnd.RandomRange(-40f, 40f), height*0.5f + Rnd.RandomRange(-40, 40), Rnd.RandomRange(-40f, 40f)), (1, height,1));
+            }
+            //GameObject.Instantiate((0, -0.5f, 0), (100, 100, 1), Quaternion.FromAxisAngle(Vector3.UnitX, MathHelper.PiOver2), new MeshRenderer(cube, nier_d));
+
+            GameObject cam = GameObject.Instantiate(position: (0, 1.75f, 0), components: [new Camera(), new AudioSource("...//..//..//..//..//Data//Audio//freed.mp3")]);
+            cam.transform.parent = GameObject.Instantiate(position: (0, 0, 5), components: new PlayerBehaviour(cam.transform)).transform;
+            cam.GetComponent<AudioSource>().Play();
 
             CursorState = CursorState.Grabbed;
         }
