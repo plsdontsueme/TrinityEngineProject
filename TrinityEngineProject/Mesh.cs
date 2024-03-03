@@ -62,7 +62,6 @@ namespace TrinityEngineProject
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(1);
             #endregion
-            TgMessage.PrintArray(data.vertexData);
         }
 
         public void Draw()

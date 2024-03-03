@@ -38,6 +38,8 @@ namespace TrinityEngineProject
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Multisample); //AntiAlising (neccessary?, see no difference)
+            GL.Enable(EnableCap.Blend); // may disable for regular 3d rendering
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.ClearColor(0.04f, 0.0f, 0.07f, 1.0f);
             IsVisible = true;
 
@@ -48,23 +50,24 @@ namespace TrinityEngineProject
         void LoadResources()
         {
             Renderer.AddShader("...//..//..//..//..//Data//Shaders//standard");
+            Renderer.AddUiShader("...//..//..//..//..//Data//Shaders//ui");
 
-            Material zaiki = new Material(Texture.Get("...//..//..//..//..//Data//Textures//zaiki-k.png"));
-            Material nier_d = new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"));
-            Mesh cube = Mesh.Get("...//..//..//..//..//Data//Models//primitive_cube.tgd");
-            GameObject zaikiCube = new GameObject(new MeshRenderer(cube, zaiki), new ZaikiCubeBehaviour());
+            GameObject nier = new GameObject(
+                new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b.tgd"), 
+                    new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"))
+                ));
+            new GameObject(
+                new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b_Hair.tgd"),
+                    new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//HairD.jpg"))
+                )).transform.parent = nier.transform;
 
-            Rnd.SetSeed(175);
-            for(int i=0; i<5000; i++)
-            {
-                float height = Rnd.RandomRange(0.9f, 1f);
-                zaikiCube.Instantiate((Rnd.RandomRange(-40f, 40f), height*0.5f + Rnd.RandomRange(-40, 40), Rnd.RandomRange(-40f, 40f)), (1, height,1));
-            }
-            //GameObject.Instantiate((0, -0.5f, 0), (100, 100, 1), Quaternion.FromAxisAngle(Vector3.UnitX, MathHelper.PiOver2), new MeshRenderer(cube, nier_d));
+            nier.Instantiate();
+            Font font = new Font("...//..//..//..//..//Data//Fonts//arial.ttf", 1000, 1000, 100, characterRanges:[Font.CharacterRange.BasicLatin, Font.CharacterRange.Latin1Supplement]);
+            GameObject.Instantiate(new UiImage(Texture.Get("...//..//..//..//..//Data//Textures//tanya.png")));
+            GameObject.Instantiate(new UiText("double" + Environment.NewLine + "lines", font)).transform.position = (120, 25, 0);
 
-            GameObject cam = GameObject.Instantiate(position: (0, 1.75f, 0), components: [new Camera(), new AudioSource("...//..//..//..//..//Data//Audio//freed.mp3")]);
-            cam.transform.parent = GameObject.Instantiate(position: (0, 0, 5), components: new PlayerBehaviour(cam.transform)).transform;
-            cam.GetComponent<AudioSource>().Play();
+            GameObject cam = GameObject.Instantiate(position: (0, 1.75f, 0), components: [new Camera()]);
+            cam.transform.parent = GameObject.Instantiate(position: (0, 0, 10), components: new PlayerBehaviour(cam.transform)).transform;
 
             CursorState = CursorState.Grabbed;
         }

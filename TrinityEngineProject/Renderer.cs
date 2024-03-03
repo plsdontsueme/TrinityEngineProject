@@ -14,13 +14,11 @@ namespace TrinityEngineProject
     internal static class Renderer
     {
         static List<ShaderGroup> shaderGroups = new List<ShaderGroup>();
-        
-
-        public static void ClearRenderGroups()
+        public static void ClearShaderGroups()
         {
-            foreach (var renderGroup in shaderGroups)
+            foreach (var shaderGroup in shaderGroups)
             {
-                renderGroup.shader.Dispose();
+                shaderGroup.shader.Dispose();
             }
             shaderGroups.Clear();
         }
@@ -39,18 +37,44 @@ namespace TrinityEngineProject
             shaderGroups[meshRenderer.shaderIndex].meshRenderers.Remove(meshRenderer);
         }
 
-        static float rot = 0f;
+
+        static List<UiShaderGroup> uiShaderGroups = new List<UiShaderGroup>();
+        public static void ClearUiRenderGroups()
+        {
+            foreach (var shaderGroup in uiShaderGroups)
+            {
+                shaderGroup.shader.Dispose();
+            }
+            uiShaderGroups.Clear();
+        }
+        public static void AddUiShader(string shaderDirectory)
+        {
+            Shader shader = new Shader(Path.Combine(shaderDirectory, "vertex.glsl"), Path.Combine(shaderDirectory, "fragment.glsl"));
+            uiShaderGroups.Add(new UiShaderGroup(shader));
+        }
+
+        public static void AddToUiRenderQueue(UiRenderer uiRenderer)
+        {
+            uiShaderGroups[uiRenderer.shaderIndex].uiRenderers.Add(uiRenderer);
+        }
+        public static void RemoveFromUiRenderQueue(UiRenderer uiRenderer)
+        {
+            uiShaderGroups[uiRenderer.shaderIndex].uiRenderers.Remove(uiRenderer);
+        }
+
+
+
         public static void RenderFrame()
         {
+            GL.DepthFunc(DepthFunction.Less);
+            Matrix4 projectionMatrix = Camera.main.GetProjectionMatrix();
+            Matrix4 viewMatrix = Camera.main.GetViewMatrix();
             foreach (var renderGroup in shaderGroups)
             {
-                Matrix4 projectionMatrix = Camera.main.GetProjectionMatrix();
-                renderGroup.shader.SetProjectionMatrix(ref projectionMatrix);
-                Matrix4 viewMatrix = Camera.main.GetViewMatrix();
-                renderGroup.shader.SetViewMatrix(ref viewMatrix);
-
                 renderGroup.shader.Use();
-                foreach(var meshRenderer in renderGroup.meshRenderers)
+                renderGroup.shader.SetProjectionMatrix(ref projectionMatrix);
+                renderGroup.shader.SetViewMatrix(ref viewMatrix);
+                foreach (var meshRenderer in renderGroup.meshRenderers)
                 {
                     Matrix4 modelMatrix = meshRenderer.transform.GetMatrix();
                     renderGroup.shader.SetModelMatrix(ref modelMatrix);
@@ -58,8 +82,43 @@ namespace TrinityEngineProject
                     meshRenderer.RenderMesh();
                 }
             }
+
+            //rendered last because of transparency
+            GL.DepthFunc(DepthFunction.Always);
+            projectionMatrix = Matrix4.CreateOrthographic(1000f * TgMain.aspectRatio, 1000f, 0, 0.01f);
+            foreach (var renderGroup in uiShaderGroups)
+            {
+                renderGroup.shader.Use();
+                renderGroup.shader.SetProjectionMatrix(ref projectionMatrix);
+                foreach (var uiRenderer in renderGroup.uiRenderers)
+                {
+                    renderGroup.shader.setDimensionVector(uiRenderer.Width, uiRenderer.Height);
+                    Matrix4 modelMatrix = uiRenderer.transform.GetMatrix();
+                    renderGroup.shader.SetModelMatrix(ref modelMatrix);
+
+                    uiRenderer.RenderUi();
+                }
+            }
         }
 
+        struct UiShaderGroup
+        {
+            public Shader shader;
+            public List<UiRenderer> uiRenderers = new List<UiRenderer>();
+            public UiShaderGroup(Shader shader)
+            {
+                this.shader = shader;
+            }
+        }
+        struct ShaderGroup
+        {
+            public Shader shader;
+            public List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
+            public ShaderGroup(Shader shader)
+            {
+                this.shader = shader;
+            }
+        }
 
         class Shader : IDisposable
         {
@@ -68,6 +127,7 @@ namespace TrinityEngineProject
             public readonly string fragmentShaderPath;
 
             readonly Dictionary<string, int> uniformLocations;
+            readonly int dimensionVectorLocation;
             readonly int viewMatrixLocation;
             readonly int modelMatrixLocation;
             readonly int projectionMatrixLocation;
@@ -133,7 +193,9 @@ namespace TrinityEngineProject
                     int location = GL.GetUniformLocation(Handle, key);
                     uniformLocations.Add(key, location);
                 }
-                viewMatrixLocation = uniformLocations["view"];
+                //no view if ui Shader
+                if (uniformLocations.ContainsKey("dimensions")) dimensionVectorLocation = uniformLocations["dimensions"];
+                if (uniformLocations.ContainsKey("view")) viewMatrixLocation = uniformLocations["view"];
                 modelMatrixLocation = uniformLocations["model"];
                 projectionMatrixLocation = uniformLocations["projection"];
             }
@@ -142,7 +204,11 @@ namespace TrinityEngineProject
             {
                 GL.UseProgram(Handle);
             }
-
+            
+            public void setDimensionVector(float width, float height)
+            {
+                GL.Uniform2(dimensionVectorLocation, width, height);
+            }
             public void SetViewMatrix(ref Matrix4 matrix)
             {
                 GL.UniformMatrix4(viewMatrixLocation, true, ref matrix);
@@ -180,15 +246,6 @@ namespace TrinityEngineProject
                 GC.SuppressFinalize(this);
             }
             #endregion
-        }
-        struct ShaderGroup
-        {
-            public Shader shader;
-            public List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
-            public ShaderGroup(Shader shader)
-            {
-                this.shader = shader;
-            }
         }
     }
 }

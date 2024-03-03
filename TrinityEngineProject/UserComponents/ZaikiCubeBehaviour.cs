@@ -23,8 +23,8 @@ namespace TrinityEngineProject
             base.Update(e);
             Vector3 target = Camera.main.transform.globalPosition;
             lastTarget.Y = MathHelper.Lerp(lastTarget.Y, target.Y, speed * Time.deltaTime);
-            lastTarget.X = MathHelper.Lerp(lastTarget.X, target.X, speed*Time.deltaTime);
-            lastTarget.Z = MathHelper.Lerp(lastTarget.Z, target.Z, speed*Time.deltaTime);
+            lastTarget.X = MathHelper.Lerp(lastTarget.X, target.X, speed * Time.deltaTime);
+            lastTarget.Z = MathHelper.Lerp(lastTarget.Z, target.Z, speed * Time.deltaTime);
 
             transform.rotation = LookAt(lastTarget, transform.position);
 
