@@ -68,8 +68,6 @@ namespace TrinityEngineProject
 
             GameObject cam = GameObject.Instantiate(position: (0, 1.75f, 0), components: [new Camera()]);
             cam.transform.parent = GameObject.Instantiate(position: (0, 0, 10), components: new PlayerBehaviour(cam.transform)).transform;
-
-            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)

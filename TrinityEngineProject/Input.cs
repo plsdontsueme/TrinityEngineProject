@@ -1,4 +1,5 @@
-﻿using OpenTK.Windowing.Common;
+﻿using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace TrinityEngineProject
@@ -21,6 +22,14 @@ namespace TrinityEngineProject
         public static bool GetMouse(MouseButton button) => _window.MouseState.IsButtonDown(button);
         public static bool GetMouseDown(MouseButton button) => _window.MouseState.IsButtonPressed(button);
         public static bool GetMouseUp(MouseButton button) => _window.MouseState.IsButtonReleased(button);
+
+        public static Vector2 MousePosition => _window.MousePosition;
+
+        public static void GrabCursor(bool state = true)
+        {
+            if (state) _window.CursorState = CursorState.Grabbed;
+            else _window.CursorState = CursorState.Normal;
+        }
 
 
         public static event Action<KeyboardKeyEventArgs> KeyDown
@@ -89,6 +98,14 @@ namespace TrinityEngineProject
             {
                 _window.MouseWheel -= value;
             }
+        }
+
+        public static Vector2 ScreenMouseToUi(Vector2 screenMouse)
+        {
+            double xunitsize = 1000d * TgMain.aspectRatio * 0.5d;
+            double x = (double)screenMouse.X / _window.Size.X * 1000d * TgMain.aspectRatio - xunitsize;
+            double y = (double)screenMouse.Y / _window.Size.Y * 1000d - 500;
+            return new Vector2((float)x, -(float)y);      
         }
     }
 }

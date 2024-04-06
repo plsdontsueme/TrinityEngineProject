@@ -11,6 +11,7 @@ namespace TrinityEngineProject
         {
             this.camTransform = camTransform;
             Input.MouseMove += Input_MouseMove;
+            Input.GrabCursor();
         }
 
         Vector2d sensitivity = new(0.001f, 0.001f);
