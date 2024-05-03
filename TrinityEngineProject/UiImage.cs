@@ -1,19 +1,15 @@
 ﻿
 namespace TrinityEngineProject
 {
-    internal class UiImage : UiRenderer
+    internal class UiImage : ElementRenderer
     {
-        public Texture texture;
         static Mesh imageMesh = Mesh.Get("...//..//..//..//..//Data//Models//quad.tgd");
 
-        public UiImage(Texture texture, int shaderIndex = 0) : base(shaderIndex, texture.Width, texture.Height)
-        {
-            this.texture = texture;
-        }
+        public UiImage(Material material) : base(material) { }
 
-        public override void RenderUi()
+        public override void RenderElement()
         {
-            texture.Use();
+            base.RenderElement();
             imageMesh.Draw();
         }
     }

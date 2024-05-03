@@ -60,5 +60,11 @@ namespace TrinityEngineProject
                 if(cameras.Count > 0) main = cameras[0];
             }
         }
+
+        public static readonly float UiGridDivisions = 1000f;
+        public static Matrix4 GerUiProjectionMatrix()
+        {
+            return Matrix4.CreateOrthographic(UiGridDivisions * TgMain.aspectRatio, UiGridDivisions, 0, 0.01f);
+        }
     }
 }

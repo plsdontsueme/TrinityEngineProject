@@ -25,12 +25,26 @@ namespace TrinityEngineProject
 
         public static Vector2 MousePosition => _window.MousePosition;
 
+        public static bool CursorGrabbed { get; private set; }
         public static void GrabCursor(bool state = true)
         {
             if (state) _window.CursorState = CursorState.Grabbed;
             else _window.CursorState = CursorState.Normal;
+
+            CursorGrabbed = state;
         }
 
+        public static event Action<TextInputEventArgs> TextInput
+        {
+            add
+            {
+                _window.TextInput += value;
+            }
+            remove
+            {
+                _window.TextInput -= value;
+            }
+        }
 
         public static event Action<KeyboardKeyEventArgs> KeyDown
         {
@@ -100,12 +114,17 @@ namespace TrinityEngineProject
             }
         }
 
+
+        public static Vector2 UiSpaceMouse()
+        {
+            return ScreenMouseToUi(MousePosition);
+        }
         public static Vector2 ScreenMouseToUi(Vector2 screenMouse)
         {
-            double xunitsize = 1000d * TgMain.aspectRatio * 0.5d;
-            double x = (double)screenMouse.X / _window.Size.X * 1000d * TgMain.aspectRatio - xunitsize;
-            double y = (double)screenMouse.Y / _window.Size.Y * 1000d - 500;
-            return new Vector2((float)x, -(float)y);      
+            double xunitsize = TgMain.aspectRatio * 0.5d * Camera.UiGridDivisions;
+            double x = (double)screenMouse.X / _window.Size.X * Camera.UiGridDivisions * TgMain.aspectRatio - xunitsize;
+            double y = (double)screenMouse.Y / _window.Size.Y * Camera.UiGridDivisions - 0.5d * Camera.UiGridDivisions;
+            return new Vector2((float)x, -(float)y);
         }
     }
 }

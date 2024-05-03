@@ -4,17 +4,17 @@ using System.Globalization;
 
 namespace TrinityEngineProject
 {
-    internal class UiText : UiRenderer
+    internal class UiText : ElementRenderer
     {
         public string Text;
-        public Font Font;
+        Font font;
 
         int VertexArrayObject;
         int VertexBufferObject;
-        public UiText(string text, Font font, int shaderIndex = 0) : base(shaderIndex)
+        public UiText(Font font, string text) : base(font)
         {
             Text = text;
-            Font = font;
+            this.font = font;
             float[] vertices = {
             0, 0, 0, 0, 0, //Bottom-left vertex
             0, 0, 0, 1, 0, //Bottom-right vertex
@@ -32,8 +32,10 @@ namespace TrinityEngineProject
             GL.EnableVertexAttribArray(1);
         }
 
-        public override void RenderUi()
+        public override void RenderElement()
         {
+            base.RenderElement();
+
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
 
             string[] lines = Text.Split(Environment.NewLine);
@@ -43,20 +45,22 @@ namespace TrinityEngineProject
                 int x = 0;
                 foreach (char c in line)
                 {
-                    var g = Font.glyphs[c];
+                    var g = font.glyphs[c];
+
+                    float gy = y - g.YOffset;
                     float[] vertices = {
-                    x,          -y,          0, g.X0, g.Y0, //Bottom-left vertex
-                    x+g.Width,  -y,          0, g.X1, g.Y0, //Bottom-right vertex
-                    x,          g.Height-y,  0, g.X0, g.Y1, //Top left
-                    x+g.Width,  g.Height-y,  0, g.X1, g.Y1  //Top right
+                    x,          gy - g.Height, 0, g.X0, g.Y0, //Bottom-left vertex
+                    x+g.Width,  gy - g.Height, 0, g.X1, g.Y0, //Bottom-right vertex
+                    x,          gy,            0, g.X0, g.Y1, //Top left
+                    x+g.Width,  gy,            0, g.X1, g.Y1  //Top right
                     };
-                    x += g.XAdvance;
+                    x += g.XAdvance - g.XOffset;
+
                     GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float), vertices);
-                    Font.texture.Use();
                     GL.BindVertexArray(VertexArrayObject);
                     GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                 }
-                y += Font.lineHeight;
+                y -= font.lineHeight;
             }
         }
     }

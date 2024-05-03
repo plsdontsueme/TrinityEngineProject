@@ -7,50 +7,19 @@ namespace TrinityEngineProject
     *  User - create
     */
 
-    internal class MeshRenderer : Component
+    internal class MeshRenderer : ElementRenderer
     {
         public Mesh mesh;
-        public Material material;
-        public int shaderIndex
-        {
-            get
-            {
-                return _shaderIndex;
-            }
-            set 
-            {
-                if (_shaderIndex == value) return;
 
-                _shaderIndex = value;
-                Renderer.RemoveFromRenderQueue(this);
-                shaderIndex = value;
-                Renderer.AddToRenderQueue(this);
-            }
-        }
-        int _shaderIndex;
-
-        public MeshRenderer(Mesh mesh, Material material, int shaderIndex = 0)
+        public MeshRenderer(Mesh mesh, Material material) : base(material)
         {
             this.mesh = mesh;
-            this.material = material;
-            _shaderIndex = shaderIndex;
         }
 
-        public void RenderMesh()
+        public override void RenderElement()
         {
-            material.Use();
+            base.RenderElement();
             mesh.Draw();
-        }
-
-        internal override void OnLoad()
-        {
-            base.OnLoad();
-            Renderer.AddToRenderQueue(this);
-        }
-        internal override void OnUnload()
-        {
-            base.OnUnload();
-            Renderer.RemoveFromRenderQueue(this);
         }
     }
 }

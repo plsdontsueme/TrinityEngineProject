@@ -49,22 +49,25 @@ namespace TrinityEngineProject
         }
         void LoadResources()
         {
-            Renderer.AddShader("...//..//..//..//..//Data//Shaders//standard");
-            Renderer.AddUiShader("...//..//..//..//..//Data//Shaders//ui");
+            Shader def = new Shader("...//..//..//..//..//Data//Shaders//standard");
+            Shader ui = new Shader("...//..//..//..//..//Data//Shaders//ui", true, DepthFunction.Always, 1);
 
             GameObject nier = new GameObject(
                 new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b.tgd"), 
-                    new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"))
+                    new Material(def, Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//Diffuse.jpg"))
                 ));
             new GameObject(
                 new MeshRenderer(Mesh.Get("...//..//..//..//..//Data//Models//Nier2b_Hair.tgd"),
-                    new Material(Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//HairD.jpg"))
+                    new Material(def,Texture.Get("...//..//..//..//..//Data//Textures//Nier2b//HairD.jpg"))
                 )).transform.parent = nier.transform;
 
             nier.Instantiate();
-            Font font = new Font("...//..//..//..//..//Data//Fonts//arial.ttf", 1000, 1000, 100, characterRanges:[Font.CharacterRange.BasicLatin, Font.CharacterRange.Latin1Supplement]);
-            GameObject.Instantiate(new UiImage(Texture.Get("...//..//..//..//..//Data//Textures//tanya.png")));
-            GameObject.Instantiate(new UiText("double" + Environment.NewLine + "lines", font)).transform.position = (120, 25, 0);
+           
+            GameObject uiTextBox = GameObject.Instantiate(new UiTextBox(), new UiImage(new Material(ui, Texture.Get("...//..//..//..//..//Data//Textures//tanya.png"))));
+            Font font = Font.Create(ui, "...//..//..//..//..//Data//Fonts//arial.ttf", 1000, 1000, 100, characterRanges: [Font.CharacterRange.BasicLatin, Font.CharacterRange.Latin1Supplement]);
+            GameObject uiText = GameObject.Instantiate(new UiText(font, "double" + Environment.NewLine + "lines" + Environment.NewLine));
+            uiText.transform.parent = uiTextBox.transform;
+            uiTextBox.GetComponent<UiTextBox>().Text = uiText.GetComponent<UiText>();
 
             GameObject cam = GameObject.Instantiate(position: (0, 1.75f, 0), components: [new Camera()]);
             cam.transform.parent = GameObject.Instantiate(position: (0, 0, 10), components: new PlayerBehaviour(cam.transform)).transform;
@@ -88,8 +91,8 @@ namespace TrinityEngineProject
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 
-            //render UI
-            Renderer.RenderFrame();
+            //render frame
+            Shader.RenderAll();
 
 
             SwapBuffers();

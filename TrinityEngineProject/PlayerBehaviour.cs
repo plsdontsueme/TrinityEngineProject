@@ -20,6 +20,8 @@ namespace TrinityEngineProject
         bool first = true;
         private void Input_MouseMove(MouseMoveEventArgs e)
         {
+            if (!Input.CursorGrabbed) return;
+
             if (first)
             {
                 lastMouse = e.Position;
@@ -34,6 +36,9 @@ namespace TrinityEngineProject
 
         protected override void Update(FrameEventArgs e)
         {
+            if (Input.GetKeyDown(Keys.Tab)) { Input.GrabCursor(!Input.CursorGrabbed); first = true; }
+            if (!Input.CursorGrabbed) return;
+
             Vector3 movement = Vector3.Zero;
             if (Input.GetKey(Keys.W)) movement.Z -= 1;
             if (Input.GetKey(Keys.S)) movement.Z += 1;

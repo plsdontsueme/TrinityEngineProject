@@ -1,27 +1,36 @@
-﻿using static StbTrueTypeSharp.StbTrueType;
+﻿
+using static StbTrueTypeSharp.StbTrueType;
 
 namespace TrinityEngineProject
 {
-    internal class Font
+    internal class Font : Material
     {
-        public readonly Texture texture;
-        public readonly byte[] bitmap;
-        public readonly int bitmapWidth, bitmapHeight;
-        public readonly Dictionary<int, GlyphInfo> glyphs = new Dictionary<int, GlyphInfo>();
+        public readonly Dictionary<int, GlyphInfo> glyphs;
         public readonly float lineHeight;
-        public Font(string path, int width, int height, float fontPixelHeight, float lineHeightMultiplicator = 0.9f, params CharacterRange[] characterRanges)
-        {
-            lineHeight = fontPixelHeight * lineHeightMultiplicator;
 
-            bitmapWidth = width;
-            bitmapHeight = height;
-            bitmap = new byte[width * height];
+        private Font(Texture texture, Shader shader, Dictionary<int, GlyphInfo> glyphs, float lineHeight) : base(shader, texture)
+        {
+            this.glyphs = glyphs;
+            this.lineHeight = lineHeight;
+            isFont = true;
+        }
+        public static Font Create(Shader shader, string path, int bitmapWidth, int bitmapHeight, float fontPixelHeight, float lineHeightMultiplicator = 0.9f, params CharacterRange[] characterRanges)
+        {
+            LoadFont(path, bitmapWidth, bitmapHeight, fontPixelHeight, characterRanges, 
+                out Texture texture, out Dictionary<int, GlyphInfo> glyphs);
+
+            return new Font(texture, shader, glyphs, fontPixelHeight * lineHeightMultiplicator);
+        }
+
+        static void LoadFont(string path, int bitmapWidth, int bitmapHeight, float fontPixelHeight, CharacterRange[] characterRanges, out Texture texture, out Dictionary<int, GlyphInfo> glyphs)
+        {
+            byte[] bitmap = new byte[bitmapWidth * bitmapHeight];
             stbtt_pack_context context = new();
             unsafe
             {
                 fixed (byte* pixelsPtr = bitmap)
                 {
-                    stbtt_PackBegin(context, pixelsPtr, width, height, width, 1, null);
+                    stbtt_PackBegin(context, pixelsPtr, bitmapWidth, bitmapHeight, bitmapWidth, 1, null);
                 }
             }
 
@@ -37,6 +46,7 @@ namespace TrinityEngineProject
                 stbtt_GetFontVMetrics(fontInfo, &ascent, &descent, &lineGap);
             }
 
+            Dictionary<int, GlyphInfo> glyphDict = new Dictionary<int, GlyphInfo>();
             foreach (var range in characterRanges)
             {
                 var charData = new stbtt_packedchar[range.Size];
@@ -54,30 +64,30 @@ namespace TrinityEngineProject
 
                     var glyphInfo = new GlyphInfo
                     {
-                        X0 = (float)charData[i].x0 / width,
-                        Y0 = 1f - (float)charData[i].y1 / height,
-                        X1 = (float)charData[i].x1 / width,
-                        Y1 = 1f - (float)charData[i].y0 / height,
+                        X0 = (float)charData[i].x0 / bitmapWidth,
+                        Y0 = 1f - (float)charData[i].y1 / bitmapHeight,
+                        X1 = (float)charData[i].x1 / bitmapWidth,
+                        Y1 = 1f - (float)charData[i].y0 / bitmapHeight,
                         Width = charData[i].x1 - charData[i].x0,
                         Height = charData[i].y1 - charData[i].y0,
                         XOffset = (int)charData[i].xoff,
                         YOffset = (int)MathF.Round(charData[i].yoff),
                         XAdvance = (int)MathF.Round(charData[i].xadvance)
                     };
-                    Console.WriteLine(glyphInfo.XOffset + " - " + glyphInfo.YOffset +", " + glyphInfo.XAdvance);
+                    Console.WriteLine(glyphInfo.XOffset + " - " + glyphInfo.YOffset + ", " + glyphInfo.XAdvance);
 
-                    glyphs.Add(i + range.Start, glyphInfo);
+                    glyphDict.Add(i + range.Start, glyphInfo);
                 }
             }
             //stbtt_PackEnd(context);
             byte[] image = new byte[bitmap.Length * 4];
-            int iy1 = height - 1;
-            for (int iy = 0; iy < height; iy++)
+            int iy1 = bitmapHeight - 1;
+            for (int iy = 0; iy < bitmapHeight; iy++)
             {
-                for (int ix = 0; ix < width; ix++)
+                for (int ix = 0; ix < bitmapWidth; ix++)
                 {
-                    int i = iy * width + ix;
-                    int ind = (iy1 * width + ix) * 4;
+                    int i = iy * bitmapWidth + ix;
+                    int ind = (iy1 * bitmapWidth + ix) * 4;
                     image[ind] = 255;
                     image[ind + 1] = 255;
                     image[ind + 2] = 255;
@@ -85,7 +95,9 @@ namespace TrinityEngineProject
                 }
                 iy1--;
             }
-            texture = new Texture(image, width, height);
+
+            texture = new Texture(image, bitmapWidth, bitmapHeight);
+            glyphs = glyphDict;
         }
 
         internal struct GlyphInfo
